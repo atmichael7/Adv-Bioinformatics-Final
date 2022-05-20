@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <cctype>
+#include <vector>
+#include <algorithm>
 using namespace std;
 
 // strings containing the info in each sequence 
@@ -16,51 +18,24 @@ ifstream input("BB20001.msf");
 // set output file
 ofstream output;
 
-
-// function that prints out the names of each sequence that have been recorded 
-void listSequenceNames(int value){
-    cout << "\nListing Sequence Name [" << value << "]: ";
-    if (value == 1){
-        for (int i = 0; i <= seq1.length(); i++){
-            cout << seq1[i];
-        }
-    }
-
-    if (value == 2){
-        for (int i = 0; i <= seq2.length(); i++){
-            cout << seq2[i];
-        }
-    }
-
-    if (value == 3){
-        for (int i = 0; i <= seq3.length(); i++){
-            cout << seq3[i];
-        }
-    }
-
-    if (value == 4){
-        for (int i = 0; i <= seq4.length(); i++){
-            cout << seq4[i];
-        }
-    }
-
-    if (value == 5){
-        for (int i = 0; i <= seq5.length(); i++){
-            cout << seq5[i];
-        }
-    }
-
-    if (value == 6){
-        for (int i = 0; i <= seq6.length(); i++){
-            cout << seq6[i];
-        }
-    }
+string OutputSequenceName(int value){
+    if (value == 1)
+        return seq1;
+    if (value == 2)
+        return seq2;
+    if (value == 3)
+        return seq3;
+    if (value == 4)
+        return seq4;
+    if (value == 5)
+        return seq5;
+    if (value == 6)
+        return seq6;
 }
 
-int tcount;
 // function that prints out the info of each sequence that have been recorded 
 void listSequenceInfo(int value){
-    cout << "\nListing Sequence Info [" << value << "]:\n";
+    cout << "\nListing Sequence Info [" << value << "]: " << OutputSequenceName(value) << "\n";
     if (value == 1){
         for (int i = 0; i <= Rseq1.length(); i++){
             cout << Rseq1[i];
@@ -178,7 +153,6 @@ int checkMatch(int in){
         }
     }
 
-    
     return 1;
 }
 
@@ -257,12 +231,42 @@ void recordSequenceData(){
                     r++;
                 }
             }
-        }
-        
+        }      
     }
 }
 
 
+            // col   ltr 
+int occurences[1000][27];
+char amino[27] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','.'};
+void generateHistogram(){
+    // go through each column
+    for (int i = 0; i <= Rseq1.length(); i++){
+        // gather the values of each sequence in that column
+        char curr[5] = {Rseq1[i], Rseq2[i], Rseq3[i], Rseq4[i], Rseq5[i]};
+
+        // nested for loop to count occurences of given letter
+        for (int j = 0; j <= 4; j++){  // goes through each index of curr 
+            for (int k = 0; k <= 26; k++){ // go through each letter in amino
+                if (curr[j] == amino[k]){
+                    occurences[i][k] += 1; 
+                }
+            }
+        }
+        //cout << "L: " << i;
+    }
+}
+
+void printHistogram(){
+    for (int i = 0; i <= 1000; i++){
+            cout << "Col [" << i << "]: "; 
+            for (int k = 0; k <= 26; k++){
+                cout << occurences[i][k]; 
+            }
+            cout << endl;
+        }
+}
+    
 
 int main(){
 
@@ -281,22 +285,17 @@ int main(){
         recordSequenceData();
         cout << "Phase 2 complete: Collected sequence details.\n";
 
-        // print out the six sequence names that have been recorded 
-        // for (int i = 1; i <= 6; i++){
-        //     cout << endl;
-        //     listSequenceNames(i);
-
-        // }
-
-        for (int i = 1; i <= 6; i++){
-            listSequenceNames(i);
-            cout << endl;
-        }
-
-        for (int i = 1; i <= 6; i++){
+        // list out the names and info stored in each sequence gathered
+        for (int i = 1; i <= 5; i++){
             listSequenceInfo(i);
             cout << endl;
         }
+
+        cout << "Phase 3 start: Gather histogram of occurences...\n";
+        generateHistogram();
+        cout << "Phase 3 complete: Gathered histogram values.\n";
+        //printHistogram();
+
 
 
 
