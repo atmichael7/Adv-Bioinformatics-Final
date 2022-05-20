@@ -1,0 +1,318 @@
+#include <iostream>
+#include <fstream>
+#include <cctype>
+using namespace std;
+
+// strings containing the info in each sequence 
+string seq1, seq2, seq3, seq4, seq5, seq6, seq7, seq8, seq9;
+// strings relating the sequence names to respective sequence 
+string Rseq1, Rseq2, Rseq3, Rseq4, Rseq5, Rseq6, Rseq7, Rseq8, Rseq9;
+
+string read;
+int seqCounter = 1;
+
+// set input variable to file 
+ifstream input("BB20001.msf");
+// set output file
+ofstream output;
+
+
+// function that prints out the names of each sequence that have been recorded 
+void listSequenceNames(int value){
+    cout << "\nListing Sequence Name [" << value << "]: ";
+    if (value == 1){
+        for (int i = 0; i <= seq1.length(); i++){
+            cout << seq1[i];
+        }
+    }
+
+    if (value == 2){
+        for (int i = 0; i <= seq2.length(); i++){
+            cout << seq2[i];
+        }
+    }
+
+    if (value == 3){
+        for (int i = 0; i <= seq3.length(); i++){
+            cout << seq3[i];
+        }
+    }
+
+    if (value == 4){
+        for (int i = 0; i <= seq4.length(); i++){
+            cout << seq4[i];
+        }
+    }
+
+    if (value == 5){
+        for (int i = 0; i <= seq5.length(); i++){
+            cout << seq5[i];
+        }
+    }
+
+    if (value == 6){
+        for (int i = 0; i <= seq6.length(); i++){
+            cout << seq6[i];
+        }
+    }
+}
+
+int tcount;
+// function that prints out the info of each sequence that have been recorded 
+void listSequenceInfo(int value){
+    cout << "\nListing Sequence Info [" << value << "]:\n";
+    if (value == 1){
+        for (int i = 0; i <= Rseq1.length(); i++){
+            cout << Rseq1[i];
+        }
+    }
+
+    if (value == 2){
+        for (int i = 0; i <= Rseq2.length(); i++){
+            cout << Rseq2[i];
+        }
+    }
+
+    if (value == 3){
+        for (int i = 0; i <= Rseq3.length(); i++){
+            cout << Rseq3[i];
+        }
+    }
+
+    if (value == 4){
+        for (int i = 0; i <= Rseq4.length(); i++){
+            cout << Rseq4[i];
+        }
+    }
+
+    if (value == 5){
+        for (int i = 0; i <= Rseq5.length(); i++){
+            cout << Rseq5[i];
+        }
+    }
+
+    if (value == 6){
+        for (int i = 0; i <= Rseq6.length(); i++){
+            cout << Rseq6[i];
+        }
+    }
+    cout << "\nEnd Sequence [" << value << "]\n";
+}
+
+void recordSequenceNames(){
+    while (true){
+            getline(input, read, '\n');
+            if (read[1] == 'N' && read[5] == ':'){  // if current read value contains N and : in Name: then collect info
+                // collect the info from the current read line, since it contains sequence info 
+                // loop begins at index 7 of read line, per their formatting design
+                // depending on the current # of read lines, this loop will populate the respective sequence
+                for (int i = 7; i <= 20; i++){
+                    // if current index in read is 'space' then break since end of name
+                    if (read[i] == ' '){break;}
+                    if (seqCounter == 1){seq1.push_back(read[i]);}
+                    if (seqCounter == 2){seq2.push_back(read[i]);}
+                    if (seqCounter == 3){seq3.push_back(read[i]);}
+                    if (seqCounter == 4){seq4.push_back(read[i]);}
+                    if (seqCounter == 5){seq5.push_back(read[i]);}
+                    if (seqCounter == 6){seq6.push_back(read[i]);}
+                }
+                seqCounter++; // current read line info has been extracted, increment by 1 so that next line will be sent to the next sequence
+                // only collects first 6 sequences, wasted execution time but meh it works
+            }
+            // check if at the end of listing sequence names
+            if (read[0] == '/' && read[1] == '/'){ 
+                cout << "Detected '//'" << endl;
+                break;
+            }
+        }
+}
+
+
+int checkMatch(int in){
+    int i = 0;
+    if (in == 1){
+        while (read[i] != ' '){
+            if (read[i] != seq1[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    if (in == 2){
+        while (read[i] != ' '){
+            if (read[i] != seq2[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    if (in == 3){
+        while (read[i] != ' '){
+            if (read[i] != seq3[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    if (in == 4){
+        while (read[i] != ' '){
+            if (read[i] != seq4[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    if (in == 5){
+        while (read[i] != ' '){
+            if (read[i] != seq5[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    if (in == 6){
+        while (read[i] != ' '){
+            if (read[i] != seq6[i] && read[i] != ' ')
+                return 0; 
+            i++;
+        }
+    }
+
+    
+    return 1;
+}
+
+void recordSequenceData(){
+    while (input.good()){
+        getline(input, read);
+        // check what chars match the recorded sequence names 
+
+        if (read[0] == seq1[0]){
+            if (checkMatch(1)){ // check if the current line contains the same seq Name as seq1
+                int r = seq1.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq1.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+
+        if (read[0] == seq2[0]){
+            if (checkMatch(2)){ // check if the current line contains the same seq Name as seq2
+                int r = seq2.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq2.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+
+        if (read[0] == seq3[0]){
+            if (checkMatch(3)){ // check if the current line contains the same seq Name as seq3
+                int r = seq3.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq3.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+
+        if (read[0] == seq4[0]){
+            if (checkMatch(4)){ // check if the current line contains the same seq Name as seq4
+                int r = seq4.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq4.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+
+        if (read[0] == seq5[0]){
+            if (checkMatch(5)){ // check if the current line contains the same seq Name as seq5
+                int r = seq5.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq5.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+
+        if (read[0] == seq6[0]){
+            if (checkMatch(6)){ // check if the current line contains the same seq Name as seq6
+                int r = seq6.length();  // set r = to seq1 names length
+                int k = read.length();
+                while (r <= k){    // while current index of read variable isn't at the end of the curr line
+                    if (read[r] != ' ' && read[r] != '\n')  // if current index in line isn't space or end of line
+                        Rseq6.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
+                    r++;
+                }
+            }
+        }
+        
+    }
+}
+
+
+
+int main(){
+
+    // check if file can be openend 
+    if (!input.is_open()) cout << "Error opening file\n";
+
+    //output.open("out.csv");
+    // while not eof
+    while(input.good()){
+        
+        cout << "Phase 1 start: Collect sequence names...";
+        recordSequenceNames();
+        cout << "Phase 1 complete: Collected sequence names.";
+
+        cout << "Phase 2 start: Collect sequence details...\n";
+        recordSequenceData();
+        cout << "Phase 2 complete: Collected sequence details.\n";
+
+        // print out the six sequence names that have been recorded 
+        // for (int i = 1; i <= 6; i++){
+        //     cout << endl;
+        //     listSequenceNames(i);
+
+        // }
+
+        for (int i = 1; i <= 6; i++){
+            listSequenceNames(i);
+            cout << endl;
+        }
+
+        for (int i = 1; i <= 6; i++){
+            listSequenceInfo(i);
+            cout << endl;
+        }
+
+
+
+        break;
+
+
+
+
+
+
+
+
+        // read line up to the prelimiter which is ; 
+        // for the last getline looking at y, it will be looking for \n for new line
+        //getline(input, age, ';');
+
+    } // end 1st loop
+
+} // end main
