@@ -253,18 +253,171 @@ void generateHistogram(){
                 }
             }
         }
-        //cout << "L: " << i;
     }
 }
 
 void printHistogram(){
-    for (int i = 0; i <= 1000; i++){
+    for (int i = 0; i <= 999; i++){
             cout << "Col [" << i << "]: "; 
             for (int k = 0; k <= 26; k++){
                 cout << occurences[i][k]; 
             }
             cout << endl;
         }
+}
+
+float ratios[1000][27];
+void getRatio(){
+    float a, b = 5;
+    for (int i = 0; i <= 999; i++){ // go through each column
+        for (int j = 0; j <= 26; j++){
+            a = occurences[i][j];
+            ratios[i][j] = (a / b);
+        }
+    }
+}
+
+void printRatios(){
+    for (int i = 0; i <= 999; i++){
+            cout << "Col [" << i << "]: "; 
+            for (int k = 0; k <= 26; k++){
+                cout << ratios[i][k] << " "; 
+            }
+            cout << endl;
+        }
+}
+
+int coreValues[26];
+void selectCoreBlocks(){
+    // 564, 569, 580, 585-596, 607-612, 635-639
+    // 26 core blocks to consider
+    coreValues[0] = 564;
+    coreValues[1] = 569;
+    coreValues[2] = 580;
+    int counter = 585;
+    for (int i = 3; i <= 14; i++){
+        coreValues[i] = counter;
+        counter++;
+    }
+    counter = 607;
+    for (int i = 15; i <= 20; i++){
+        coreValues[i] = counter;
+        counter++;
+    }
+    counter = 635;
+    for (int i = 21; i <= 25; i++){
+        coreValues[i] = counter;
+        counter++;
+    }
+}
+
+void printCoreBlocks(){
+    cout << "\n Core Block Values: ";
+    for (int i = 0; i <= 25; i++){
+        cout << coreValues[i] << " ";
+    }
+}
+
+void showUsedLetters(){
+    float testset[27];
+        for (int i = 0; i <= 999; i++){ 
+            for (int k = 0; k <= 26; k++){
+                testset[k] += ratios[i][k]; 
+            }
+            cout << endl;
+        }
+
+        for (int i = 0; i <= 26; i++){
+            cout << testset[i] << " "; 
+        }
+}
+
+// int CoreSequence[5][26];
+// void generateCoreSequence(){
+//     int temp;
+//     for (int i = 0; i <= 25; i++){
+//         temp = coreValues[i];
+//         CoreSequence[0][i] = Rseq1[temp];
+//         cout << coreValues << " - " << CoreSequence[0][i] << endl;
+//     }
+
+//     for (int i = 0; i <= 25; i++){
+//         temp = coreValues[i];
+//         CoreSequence[1][i] = Rseq2[temp];
+//     }
+
+//     for (int i = 0; i <= 25; i++){
+//         temp = coreValues[i];
+//         CoreSequence[2][i] = Rseq3[temp];
+//     }
+
+//     for (int i = 0; i <= 25; i++){
+//         temp = coreValues[i];
+//         CoreSequence[3][i] = Rseq4[temp];
+//     }
+
+//     for (int i = 0; i <= 25; i++){
+//         temp = coreValues[i];
+//         CoreSequence[4][i] = Rseq5[temp];
+//     }
+// }
+
+// void printCoreSequences(){
+//     cout << "\n Core Sequence Values: ";
+//     for (int i = 0; i <= 4; i++){
+//         cout << "\n [" << i << "] ";
+//         for (int j = 0; j <= 25; j++){
+//             cout << CoreSequence[i][j] << " ";
+//         }
+//     }
+// }
+
+struct states{
+    int state;
+
+    int L1, L2, L3, L4, L5;  // letters spotted in ratios
+    float R1, R2, R3, R4, R5;  // ratios of spotted letters
+    // If Ln == 99, then there is a repeat since 99 is empty value
+    // If Rn == 0, then Ln should == 99
+};
+
+vector <states> results;
+void generateHMM(){
+    int track, cvcount; // corevalue count to track which position in core block 
+    // 25 is size of corevalues array
+    for (int i = 0; i <= 25; i++){  // each state
+        // get each ratio value of each core block column
+        int seen[5] = {99,99,99,99,99};
+        float ratio_seen[5] = {0,0,0,0,0};
+        track = 0;
+        cvcount = coreValues[i];    // core value count is the current index of core block in corevalues ex 565 is at coreValues[0]
+        states currState;    // make new struct for current state
+        currState.state = i;
+        for (int j = 0; j <= 26; j++){ 
+            if (ratios[cvcount][j] > 0){    // check ratios at columns where core blocks are, checking each letter i if its greater than zero
+                seen[track] = j;    // store letter corresponding number 
+                ratio_seen[track] = ratios[cvcount][j]; // store ratio of spotted letter
+                track++;
+            }
+        }
+
+        currState.L1 = seen[0];
+        currState.L2 = seen[1];
+        currState.L3 = seen[2];
+        currState.L4 = seen[3];
+        currState.L5 = seen[4];
+
+        currState.R1 = ratio_seen[0];
+        currState.R2 = ratio_seen[1];
+        currState.R3 = ratio_seen[2];
+        currState.R4 = ratio_seen[3];
+        currState.R5 = ratio_seen[4];
+
+        results.push_back(currState);
+
+
+    }
+    
 }
     
 
@@ -296,7 +449,34 @@ int main(){
         cout << "Phase 3 complete: Gathered histogram values.\n";
         //printHistogram();
 
+        cout << "Phase 4 start: Generate ratios of histogram...\n";
+        getRatio();
+        //printRatios();
+        cout << "Phase 4 complete: Ratios calculated.\n";
 
+        cout << "Phase 5 start: Selecting core blocks...\n";
+        selectCoreBlocks();
+        //printCoreBlocks();
+        cout << "Phase 5 complete: Core block values recorded.\n";
+
+        //cout << "Phase 6 start: Populate core value sequences...\n";
+        //generateCoreSequence();
+        //printCoreSequences();
+
+        //showUsedLetters();  // concluded that Z is the only letter not used in the sequences
+
+        generateHMM();
+
+
+        for (int i = 0; i <= results.size(); i++){
+            cout << "State: " << results[i].state << "\n";
+            cout << "L1: " << results[i].L1 << " - " << results[i].R1 << endl;
+            cout << "L2: " << results[i].L2 << " - " << results[i].R2 << endl;
+            cout << "L3: " << results[i].L3 << " - " << results[i].R3 << endl;
+            cout << "L4: " << results[i].L4 << " - " << results[i].R4 << endl;
+            cout << "L5: " << results[i].L5 << " - " << results[i].R5 << endl;
+            cout << endl;
+        }
 
 
         break;
