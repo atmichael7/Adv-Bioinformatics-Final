@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <cctype>
+//#include <cctype>
 #include <vector>
-#include <algorithm>
+//#include <algorithm>
 using namespace std;
 
 // strings containing the info in each sequence 
@@ -170,6 +170,7 @@ void recordSequenceData(){
                         Rseq1.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq1.pop_back();
             }
         }
 
@@ -182,6 +183,7 @@ void recordSequenceData(){
                         Rseq2.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq2.pop_back();
             }
         }
 
@@ -194,6 +196,7 @@ void recordSequenceData(){
                         Rseq3.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq3.pop_back();
             }
         }
 
@@ -206,6 +209,7 @@ void recordSequenceData(){
                         Rseq4.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq4.pop_back();
             }
         }
 
@@ -218,6 +222,7 @@ void recordSequenceData(){
                         Rseq5.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq5.pop_back();
             }
         }
 
@@ -230,6 +235,7 @@ void recordSequenceData(){
                         Rseq6.push_back(read[r]);           // add current sequence sequence index info into corresponding sequence
                     r++;
                 }
+                Rseq6.pop_back();
             }
         }      
     }
@@ -379,12 +385,21 @@ struct states{
     float R1, R2, R3, R4, R5;  // ratios of spotted letters
     // If Ln == 99, then there is a repeat since 99 is empty value
     // If Rn == 0, then Ln should == 99
+
+    // tTm = this state to match     tTi = this state to insert     tTd = this to deletion 
+    // these three should all add up to 1 for a given state
+    float tTm, tTi, tTd;
 };
 
 vector <states> results;
 void generateHMM(){
     int track, cvcount; // corevalue count to track which position in core block 
     // 25 is size of corevalues array
+    states beginState;
+    beginState.state = -1;          // these lines create the begin state, with prob of going to match or insertion being .5 each
+    beginState.tTm = 0.5;
+    beginState.tTi = 0.5;
+    results.push_back(beginState);
     for (int i = 0; i <= 25; i++){  // each state
         // get each ratio value of each core block column
         int seen[5] = {99,99,99,99,99};
@@ -401,6 +416,13 @@ void generateHMM(){
             }
         }
 
+        //    || 564 || 569 || 580 || 585-596 || 607-612 || 635-639 ||
+        if (coreValues[i] == 564 || coreValues[i] == 569 || coreValues[i] == 580 || coreValues[i] == 596 || coreValues[i] == 612 || coreValues[i] == 639){
+            currState.tTi = 0.8;
+            currState.tTm = 0.1;
+            currState.tTd = 0.1;  // only possible is an insertion where it becomes divergent 
+        }
+
         currState.L1 = seen[0];
         currState.L2 = seen[1];
         currState.L3 = seen[2];
@@ -414,10 +436,88 @@ void generateHMM(){
         currState.R5 = ratio_seen[4];
 
         results.push_back(currState);
+    }
 
-
+    for (int i = 0; i <= 25; i++){  // go through each state to determine tTm tTi tTd values
+        if (coreValues[i] != 564 && coreValues[i] != 569 && coreValues[i] != 580 && coreValues[i] != 596 && coreValues[i] != 612 && coreValues[i] != 639){
+            results[i].tTm = 0.8; 
+            results[i].tTd = 0.1; // with current sequences, deletions are not very likely
+            results[i].tTi = 0.1; // same goes for insertion
+            // with current understanding, only giving deletion and insertion a small chance due to pseudocounts
+        }
     }
     
+}
+
+void printMatches(){
+    for (int i = 0; i <= (results.size() - 1); i++){
+            cout << "State: " << results[i].state << "\n";
+            cout << "L1: " << results[i].L1 << " - " << results[i].R1 << endl;
+            cout << "L2: " << results[i].L2 << " - " << results[i].R2 << endl;
+            cout << "L3: " << results[i].L3 << " - " << results[i].R3 << endl;
+            cout << "L4: " << results[i].L4 << " - " << results[i].R4 << endl;
+            cout << "L5: " << results[i].L5 << " - " << results[i].R5 << endl;
+            cout << "tTm = " << results[i].tTm << " | tTi = " << results[i].tTi << " | tTd = " << results[i].tTd << endl;
+            cout << endl;
+        }
+}
+
+struct sequence{
+    string seq;
+    float prob;
+};
+
+vector<float> final;
+int gCount1, gCount2;
+void doingCalc(){
+    for (int i = 0; i <= 3; i++){
+
+    }
+}
+
+float totalOut;
+void calculateProb(){
+    char corrChar, nextCorrChar;
+    int corrCore, nextCorrCore;
+    totalOut = 1;
+    for (int i = 0; i <= 24; i++){  // use current i in Rseq1 to determine where to go 
+        corrCore = coreValues[i];
+        nextCorrCore = coreValues[i+1];
+        corrChar = Rseq1[corrCore]; // get letter from core block value in sequence 1
+        nextCorrChar = Rseq1[nextCorrCore]; // get next letter from core block value in sequence 1
+        for (int j = 0; j <= 4; j++){
+            for (int k = 0; k <= 27; k++){ // go thru corr letter in seq
+                if (amino[k] == nextCorrChar){
+                    // now match see corresponding value 
+                    if (j == 0){
+                        totalOut == totalOut*results[i].R1; break;
+                    }
+                    if (j == 1){
+                        totalOut == totalOut*results[i].R2; break;
+                    }
+                    if (j == 2){
+                        totalOut == totalOut*results[i].R3; break; 
+                    }
+                    if (j == 3){
+                        totalOut == totalOut*results[i].R4; break;
+                    }
+                    if (j == 4){
+                        totalOut == totalOut*results[i].R5; break; 
+                    }
+                }
+            }
+        }
+        // for (int j = 0; j <= 27; j++){
+        //     for (int k = 0; k <= 4; k++){
+        //         if (amino[k] == nextCorrChar){
+
+        //         }
+        //     }
+        // }
+  
+    }
+    cout << "\n Chance of Sequence 1: " << totalOut;
+    totalOut = 0;
 }
     
 
@@ -467,17 +567,21 @@ int main(){
 
         generateHMM();
 
+        
+        // for (int i = 0; i <= 25; i++){
+        //     int tmp1 = coreValues[i];
+        //     cout << Rseq1[tmp1];
+        //     //cout << coreValues[i] << " ";
+        // }
 
-        for (int i = 0; i <= results.size(); i++){
-            cout << "State: " << results[i].state << "\n";
-            cout << "L1: " << results[i].L1 << " - " << results[i].R1 << endl;
-            cout << "L2: " << results[i].L2 << " - " << results[i].R2 << endl;
-            cout << "L3: " << results[i].L3 << " - " << results[i].R3 << endl;
-            cout << "L4: " << results[i].L4 << " - " << results[i].R4 << endl;
-            cout << "L5: " << results[i].L5 << " - " << results[i].R5 << endl;
-            cout << endl;
-        }
 
+
+        printMatches();
+        
+        //    || 564 || 569 || 580 || 585-596 || 607-612 || 635-639 ||
+        // 26 core blocks to consider
+
+        calculateProb();
 
         break;
 
