@@ -1,3 +1,11 @@
+/*  Michael Barrett
+
+    All crappy algorithms were though up by me
+    they are by no means good, but they get the job done 
+    for the super specific task. This was specially designed to a msf
+    file for sequence data gathering and information processing
+*/
+
 #include <iostream>
 #include <fstream>
 //#include <cctype>
